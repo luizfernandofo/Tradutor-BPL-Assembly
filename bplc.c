@@ -6,29 +6,33 @@
 
 
 ///     Le uma linha do arquivo de entrada, verificando um caracter por vez
-int read_line(char line[LINESZ]){
-    int i = 0;
-    int ch;
+int read_line(char *line){
+    if(fgets(line, LINESZ, stdin) != NULL){
+        remove_newline(line);
 
-    for(i = 0; i < LINESZ; i++){
-        if((ch = fgetchar()) != EOF && ch != '\0'){
-            line[i] = (char) ch;
-        }
-        else{
-            line[i] = '\0';
-            break;
-        }
+        return 1;
     }
+    else return 0;
+}
 
-    if(line[0] == '\0'){
-        return 0;
-    }
-    return 1;
+void remove_newline(char *ptr){
+  while (*ptr) {
+    if (*ptr == '\n')
+      *ptr = 0;
+    else
+      ptr++;
+  }
 }
 
 int main (){
     FILE *arquivo_S;
     char line[LINESZ];
+    char assembly_line[LINESZ];
+    int r;
+    int f_num;
+    char p1_type;
+    char p2_type;
+    char p3_type;
 
 
     if((arquivo_S = fopen("Assembly.S", "w")) == NULL) {
@@ -36,9 +40,45 @@ int main (){
         exit (1);
     }
 
-    while (read_line(line) != 0){
-        fputs(line, arquivo_S);
+    ///começo do codigo em assembly, header
+    fputs("    .section .rodata\n\n    .data\n\n    .text\n\n", arquivo_S);
+
+
+    while (read_line(line)){
+        r = sscanf(line, "function f%d p%c1 p%c2 p%c3", &f_num, &p1_type, &p2_type, &p3_type);
+
+        if(r == 0) continue;
+
+        if (r == 4) {
+            sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n   tipo 2 = %c\n   tipo 3 = %c\n\n", f_num, f_num, p1_type, p2_type, p3_type);
+            fputs(assembly_line, arquivo_S);
+
+            continue;
+        }
+
+        if (r == 3) {
+            sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n   tipo 2 = %c\n\n", f_num, f_num, p1_type, p2_type);
+            fputs(assembly_line, arquivo_S);
+
+            continue;
+        }
+
+        if (r == 2) {
+            sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n\n", f_num, f_num, p1_type);
+            fputs(assembly_line, arquivo_S);
+
+            continue;
+        }
+
+        if (r == 1) {
+            sprintf(assembly_line, "    .globl f%d\nf%d:\n\n", f_num, f_num);
+            fputs(assembly_line, arquivo_S);
+
+            continue;
+        }
+
     }
+
 
 
     return 0;
