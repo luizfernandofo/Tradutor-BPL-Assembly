@@ -33,6 +33,7 @@ int main (){
     char p1_type;
     char p2_type;
     char p3_type;
+    int function_block = 1;
 
 
     if((arquivo_S = fopen("Assembly.S", "w")) == NULL) {
@@ -45,34 +46,45 @@ int main (){
 
 
     while (read_line(line)){
-        r = sscanf(line, "function f%d p%c1 p%c2 p%c3", &f_num, &p1_type, &p2_type, &p3_type);
 
-        if(r == 0) continue;
+        if(function_block){
+            r = sscanf(line, "function f%d p%c1 p%c2 p%c3", &f_num, &p1_type, &p2_type, &p3_type);
 
-        if (r == 4) {
-            sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n   tipo 2 = %c\n   tipo 3 = %c\n\n", f_num, f_num, p1_type, p2_type, p3_type);
-            fputs(assembly_line, arquivo_S);
+            if (r == 4) {
+                sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n   tipo 2 = %c\n   tipo 3 = %c\n\n", f_num, f_num, p1_type, p2_type, p3_type);
+                fputs(assembly_line, arquivo_S);
 
-            continue;
+                function_block = 0;
+                continue;
+            }
+
+            if (r == 3) {
+                sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n   tipo 2 = %c\n\n", f_num, f_num, p1_type, p2_type);
+                fputs(assembly_line, arquivo_S);
+
+                function_block = 0;
+                continue;
+            }
+
+            if (r == 2) {
+                sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n\n", f_num, f_num, p1_type);
+                fputs(assembly_line, arquivo_S);
+
+                function_block = 0;
+                continue;
+            }
+
+            if (r == 1) {
+                sprintf(assembly_line, "    .globl f%d\nf%d:\n\n", f_num, f_num);
+                fputs(assembly_line, arquivo_S);
+
+                function_block = 0;
+                continue;
+            }
         }
 
-        if (r == 3) {
-            sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n   tipo 2 = %c\n\n", f_num, f_num, p1_type, p2_type);
-            fputs(assembly_line, arquivo_S);
-
-            continue;
-        }
-
-        if (r == 2) {
-            sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n\n", f_num, f_num, p1_type);
-            fputs(assembly_line, arquivo_S);
-
-            continue;
-        }
-
-        if (r == 1) {
-            sprintf(assembly_line, "    .globl f%d\nf%d:\n\n", f_num, f_num);
-            fputs(assembly_line, arquivo_S);
+        if (strncmp(line, "end", 3) == 0) {
+            function_block = 1;
 
             continue;
         }
