@@ -5,24 +5,25 @@
 #define LINESZ 256
 
 
-///     Le uma linha do arquivo de entrada, verificando um caracter por vez
-int read_line(char *line){
-    if(fgets(line, LINESZ, stdin) != NULL){
-        remove_newline(line);
+// ===========================
+// Funções auxiliares
+// ===========================
 
-        return 1;
-    }
-    else return 0;
-}
 
-void remove_newline(char *ptr){
-  while (*ptr) {
-    if (*ptr == '\n')
-      *ptr = 0;
-    else
-      ptr++;
-  }
-}
+void remove_newline(char *ptr);
+
+
+// Lê uma linha do arquivo de entrada, verificando um caracter por vez.
+int read_line(char *line);
+
+
+void generate_header(FILE *file);
+
+
+// ===========================
+// Main
+// ===========================
+
 
 int main (){
     FILE *arquivo_S;
@@ -38,12 +39,10 @@ int main (){
 
     if((arquivo_S = fopen("Assembly.S", "w")) == NULL) {
         printf("Cannot open file.\n");
-        exit (1);
+        return 1;
     }
 
-    ///começo do codigo em assembly, header
-    fputs("    .section .rodata\n\n    .data\n\n    .text\n\n", arquivo_S);
-
+    generate_header(arquivo_S);
 
     while (read_line(line)){
 
@@ -51,7 +50,7 @@ int main (){
             r = sscanf(line, "function f%d p%c1 p%c2 p%c3", &f_num, &p1_type, &p2_type, &p3_type);
 
             if (r == 4) {
-                sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n   tipo 2 = %c\n   tipo 3 = %c\n\n", f_num, f_num, p1_type, p2_type, p3_type);
+                sprintf(assembly_line, "\t.globl f%d\nf%d:\n   tipo 1 = %c\n   tipo 2 = %c\n   tipo 3 = %c\n\n", f_num, f_num, p1_type, p2_type, p3_type);
                 fputs(assembly_line, arquivo_S);
 
                 function_block = 0;
@@ -91,7 +90,37 @@ int main (){
 
     }
 
-
+    fclose(arquivo_S);
 
     return 0;
+}
+
+
+// ===========================
+// Funções auxiliares
+// ===========================
+
+
+void remove_newline(char *ptr){
+  while (*ptr) {
+    if (*ptr == '\n')
+      *ptr = 0;
+    else
+      ptr++;
+  }
+}
+
+
+int read_line(char *line){
+    if(fgets(line, LINESZ, stdin) != NULL){
+        remove_newline(line);
+
+        return 1;
+    }
+    else return 0;
+}
+
+
+void generate_header(FILE *file){
+    fputs(".section .rodata\n\n.data\n\n\t.text\n\n", file);
 }
