@@ -31,10 +31,16 @@ int main (){
     char assembly_line[LINESZ];
     int r;
     int f_num;
+    int var_indice;
+    int vet_size;
     char p1_type;
     char p2_type;
     char p3_type;
+    char var_type;
     int function_block = 1;
+    int def_block = 1;
+    int stack_block = 0;
+
 
 
     if((arquivo_S = fopen("Assembly.S", "w")) == NULL) {
@@ -50,7 +56,11 @@ int main (){
             r = sscanf(line, "function f%d p%c1 p%c2 p%c3", &f_num, &p1_type, &p2_type, &p3_type);
 
             if (r == 4) {
-                sprintf(assembly_line, "\t.globl f%d\nf%d:\n   tipo 1 = %c\n   tipo 2 = %c\n   tipo 3 = %c\n\n", f_num, f_num, p1_type, p2_type, p3_type);
+                sprintf(assembly_line, "\t.globl f%d\nf%d:\n", f_num, f_num);
+                fputs(assembly_line, arquivo_S);
+                sprintf(assembly_line, "    pushq %%rbp\n");
+                fputs(assembly_line, arquivo_S);
+                sprintf(assembly_line, "    movq %%rsp, %%rbp\n\n");
                 fputs(assembly_line, arquivo_S);
 
                 function_block = 0;
@@ -58,7 +68,11 @@ int main (){
             }
 
             if (r == 3) {
-                sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n   tipo 2 = %c\n\n", f_num, f_num, p1_type, p2_type);
+                sprintf(assembly_line, "    .globl f%d\nf%d:\n", f_num, f_num);
+                fputs(assembly_line, arquivo_S);
+                sprintf(assembly_line, "    pushq %%rbp\n");
+                fputs(assembly_line, arquivo_S);
+                sprintf(assembly_line, "    movq %%rsp, %%rbp\n\n");
                 fputs(assembly_line, arquivo_S);
 
                 function_block = 0;
@@ -66,7 +80,11 @@ int main (){
             }
 
             if (r == 2) {
-                sprintf(assembly_line, "    .globl f%d\nf%d:\n   tipo 1 = %c\n\n", f_num, f_num, p1_type);
+                sprintf(assembly_line, "    .globl f%d\nf%d:\n", f_num, f_num);
+                fputs(assembly_line, arquivo_S);
+                sprintf(assembly_line, "    pushq %%rbp\n");
+                fputs(assembly_line, arquivo_S);
+                sprintf(assembly_line, "    movq %%rsp, %%rbp\n\n");
                 fputs(assembly_line, arquivo_S);
 
                 function_block = 0;
@@ -74,7 +92,11 @@ int main (){
             }
 
             if (r == 1) {
-                sprintf(assembly_line, "    .globl f%d\nf%d:\n\n", f_num, f_num);
+                sprintf(assembly_line, "    .globl f%d\nf%d:\n", f_num, f_num);
+                fputs(assembly_line, arquivo_S);
+                sprintf(assembly_line, "    pushq %%rbp\n");
+                fputs(assembly_line, arquivo_S);
+                sprintf(assembly_line, "    movq %%rsp, %%rbp\n\n");
                 fputs(assembly_line, arquivo_S);
 
                 function_block = 0;
@@ -82,7 +104,51 @@ int main (){
             }
         }
 
-        if (strncmp(line, "end", 3) == 0) {
+        if (strncmp(line, "end", 3) == 0 && strncmp(line, "enddef", 6) != 0) {
+            function_block = 1;
+
+            sprintf(assembly_line, "    leave\n");
+            fputs(assembly_line, arquivo_S);
+            sprintf(assembly_line, "    ret\n\n");
+            fputs(assembly_line, arquivo_S);
+
+            continue;
+        }
+
+        if (strncmp(line, "def", 3) == 0) {
+            def_block = 1;
+
+            continue;
+        }
+
+        if (strncmp(line, "enddef", 6) == 0) {
+            def_block = 0;
+
+            continue;
+        }
+
+        if(def_block){
+            r = sscanf(line, "v%c", &var_type);
+            if(var_type == 'a'){
+                r = sscanf(line, "v%cr vi%d", &var_type, &var_indice);
+
+                sprintf(assembly_line, "    tipo var = %c, var%d\n\n", var_type, var_indice);
+                fputs(assembly_line, arquivo_S);
+
+                continue;
+            }
+            else{
+                r = sscanf(line, "v%ct va%d size ci%d", &var_type, &var_indice, &vet_size);
+
+                sprintf(assembly_line, "    tipo vet = %c, vet%d size %d\n\n", var_type, var_indice, vet_size);
+                fputs(assembly_line, arquivo_S);
+
+                continue;
+            }
+
+        }
+
+        if (strncmp(line, "enddef", 3) == 0) {
             function_block = 1;
 
             continue;
