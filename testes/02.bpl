@@ -32,8 +32,11 @@ vi2 = pi1 / vi1
 
 vi2 = pi1 / pi2 
 
-vi1 = call f1 vi1 va3
-vi1 = call f1 ci5 pa1
+vi1 = call f1 ci1 
+vi3 = call f2 vi1 va3
+vi5 = call f3 ci-5 pi1 va3
+vi5 = call f4 pa2 pa3 pi1
+
 
 return vi2
 end
