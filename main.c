@@ -39,10 +39,11 @@ int main (){
     char assembly_line[LINESZ];
     int r;
     int f_num;
-    int var_indice;
+    int var_index;
     int vet_size;
     int stack_counter = 0;
     int stack = 0;
+    int func_number_of_para;
     char p1_type;
     char p2_type;
     char p3_type;
@@ -57,6 +58,9 @@ int main (){
     int _1_operand_index;
     int _2_operand_index;
     char control_str[4] = {0,0,0,0};
+
+    int var_stack[5];
+    int para_stack[3];
 
 
     if((arquivo_S = fopen("Assembly.S", "w")) == NULL) {
@@ -84,6 +88,24 @@ int main (){
                 stack = 0;
 
                 function_block = 0;
+
+                stack_counter = calculate_stack(8, 8, &stack);
+                sprintf(assembly_line, "    # %%rdi ->   -%d   # 1o para\n",  stack_counter);
+                fputs(assembly_line, arquivo_S);
+                para_stack[0] = stack_counter;
+
+                stack_counter = calculate_stack(8, 8, &stack);
+                sprintf(assembly_line, "    # %%rsi ->   -%d   # 2o para\n",  stack_counter);
+                fputs(assembly_line, arquivo_S);
+                para_stack[1] = stack_counter;
+
+                stack_counter = calculate_stack(8, 8, &stack);
+                sprintf(assembly_line, "    # %%rdx ->   -%d   # 3o para\n",  stack_counter);
+                fputs(assembly_line, arquivo_S);
+                para_stack[2] = stack_counter;
+
+                func_number_of_para = 3;
+
                 continue;
             }
 
@@ -98,6 +120,19 @@ int main (){
                 stack = 0;
 
                 function_block = 0;
+
+                stack_counter = calculate_stack(8, 8, &stack);
+                sprintf(assembly_line, "    # %%rdi ->   -%d   # 1o para\n",  stack_counter);
+                fputs(assembly_line, arquivo_S);
+                para_stack[0] = stack_counter;
+
+                stack_counter = calculate_stack(8, 8, &stack);
+                sprintf(assembly_line, "    # %%rsi ->   -%d   # 2o para\n",  stack_counter);
+                fputs(assembly_line, arquivo_S);
+                para_stack[1] = stack_counter;
+
+                func_number_of_para = 2;
+
                 continue;
             }
 
@@ -112,6 +147,14 @@ int main (){
                 stack = 0;
 
                 function_block = 0;
+
+                stack_counter = calculate_stack(8, 8, &stack);
+                sprintf(assembly_line, "    # %%rdi ->   -%d   # 1o para\n",  stack_counter);
+                fputs(assembly_line, arquivo_S);
+                para_stack[0] = stack_counter;
+
+                func_number_of_para = 1;
+                
                 continue;
             }
 
@@ -126,6 +169,9 @@ int main (){
                 stack = 0;
 
                 function_block = 0;
+
+                func_number_of_para = 0;
+
                 continue;
             }
         }
@@ -164,22 +210,26 @@ int main (){
         if(def_block){
             r = sscanf(line, "v%c", &var_type);
             if(var_type == 'a'){
-                r = sscanf(line, "v%cr vi%d", &var_type, &var_indice);
+                r = sscanf(line, "v%cr vi%d", &var_type, &var_index);
 
                 stack_counter = calculate_stack(4, 4, &stack);
                 
-                sprintf(assembly_line, "    # vi%d: -%d\n", var_indice, stack_counter);
+                sprintf(assembly_line, "    # vi%d: -%d\n", var_index, stack_counter);
                 fputs(assembly_line, arquivo_S);
+
+                var_stack[var_index-1] = stack_counter;
 
                 continue;
             }
             else{
-                r = sscanf(line, "v%ct va%d size ci%d", &var_type, &var_indice, &vet_size);
+                r = sscanf(line, "v%ct va%d size ci%d", &var_type, &var_index, &vet_size);
 
-                stack_counter = calculate_stack(8, 8*vet_size, &stack);
+                stack_counter = calculate_stack(4, 4*vet_size, &stack);
                 
-                sprintf(assembly_line, "    # va%d: -%d\n", var_indice, stack_counter);
+                sprintf(assembly_line, "    # va%d: -%d\n", var_index, stack_counter);
                 fputs(assembly_line, arquivo_S);
+
+                var_stack[var_index-1] = stack_counter;
 
                 continue;
             }
@@ -191,30 +241,349 @@ int main (){
             /// @brief bloco de atribuição
             /// @return 
             {/*****************************************************/
+                
+                /// @brief Cabeçalho do corpo da função, imprime subq e salva os parametros na pilha
+                /// @return 
+                if(func_number_of_para != -1){
+                    sprintf(assembly_line, "\n    subq  $===, %%rsp\n\n");
+                    fputs(assembly_line, arquivo_S);
 
-                sscanf(line, "vi%d = %c%c%c%c", &var_indice, 
+                    if(func_number_of_para == 1){
+                        sprintf(assembly_line, "    movq    %%rdi, -%d(%%rbp)    # salvando 1o para\n\n", para_stack[0]);
+                        fputs(assembly_line, arquivo_S);
+
+                        func_number_of_para = -1;
+                    }
+                    if(func_number_of_para == 2){
+                        sprintf(assembly_line, "    movq    %%rdi, -%d(%%rbp)    # salvando 1o para\n", para_stack[0]);
+                        fputs(assembly_line, arquivo_S);
+
+                        sprintf(assembly_line, "    movq    %%rsi, -%d(%%rbp)    # salvando 2o para\n\n", para_stack[1]);
+                        fputs(assembly_line, arquivo_S);
+
+                        func_number_of_para = -1;
+                    }
+                    if(func_number_of_para == 3){
+                        sprintf(assembly_line, "    movq    %%rdi, -%d(%%rbp)    # salvando 1o para\n", para_stack[0]);
+                        fputs(assembly_line, arquivo_S);
+                    
+                        sprintf(assembly_line, "    movq    %%rsi, -%d(%%rbp)    # salvando 2o para\n", para_stack[1]);
+                        fputs(assembly_line, arquivo_S);
+
+                        sprintf(assembly_line, "    movq    %%rdx, -%d(%%rbp)    # salvando 3o para\n\n", para_stack[2]);
+                        fputs(assembly_line, arquivo_S);
+
+                        func_number_of_para = -1;
+                    }
+                }
+
+                sscanf(line, "vi%d = %c%c%c%c", &var_index, 
                 &control_str[0],
                 &control_str[1],
                 &control_str[2],
                 &control_str[3]);
 
+                
+                /// @brief Bloco para caso ocorra chamada de função
+                /// @return 
                 if(strncmp(control_str, "call", 4) == 0){
-                    sprintf(assembly_line, "    funcao de call\n");
+                    sprintf(assembly_line, "\n    funcao de call\n");
                     fputs(assembly_line, arquivo_S);
 
                     control_str[0] = 0;
                     continue;
                 }
 
-                sscanf(line, "vi%d = %ci%d", &var_indice, &_1_operand_type, &_1_operand_index);
-            
-                sscanf(line, "vi%d = %ci%d %c %ci%d",
-                    &var_indice, 
+                r = sscanf(line, "vi%d = %c%*c%d %c %c%*c%d",
+                    &var_index, 
                     &_1_operand_type,
                     &_1_operand_index,
                     &operand,
                     &_2_operand_type,
                     &_2_operand_index);
+                /// @brief Bloco de opeção
+                /// @return 
+                if(r == 6){
+                    if(operand == '+'){
+                        if(_1_operand_type == 'c'){
+                            sprintf(assembly_line, "\n    movl    $%d, %%r8d\n", _1_operand_index);
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_1_operand_type == 'v'){
+                            sprintf(assembly_line, "\n    movl    -%d(%%rbp), %%r8d\n", var_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_1_operand_type == 'p'){
+                            sprintf(assembly_line, "\n    movq    -%d(%%rbp), %%r10\n", para_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    movl   %%r10d, %%r8d\n");
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_2_operand_type == 'c'){
+                            sprintf(assembly_line, "    movl    $%d, %%r9d\n", _2_operand_index);
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    addl    %%r8d, %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%r9d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+
+                        if(_2_operand_type == 'v'){
+                            sprintf(assembly_line, "    movl    -%d(%%rbp), %%r9d\n", var_stack[_2_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    addl    %%r8d, %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%r9d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+
+                        if(_2_operand_type == 'p'){
+                            sprintf(assembly_line, "\n    movq    -%d(%%rbp), %%r10\n", para_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    movl   %%r10d, %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    addl    %%r8d, %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%r9d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+                    }
+
+                    if(operand == '-'){
+                        if(_1_operand_type == 'c'){
+                            sprintf(assembly_line, "\n    movl    $%d, %%r8d\n", _1_operand_index);
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_1_operand_type == 'v'){
+                            sprintf(assembly_line, "\n    movl    -%d(%%rbp), %%r8d\n", var_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_1_operand_type == 'p'){
+                            sprintf(assembly_line, "\n    movq    -%d(%%rbp), %%r10\n", para_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    movl   %%r10d, %%r8d\n");
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_2_operand_type == 'c'){
+                            sprintf(assembly_line, "    movl    $%d, %%r9d\n", _2_operand_index);
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    subl    %%r9d, %%r8d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%r8d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+
+                        if(_2_operand_type == 'v'){
+                            sprintf(assembly_line, "    movl    -%d(%%rbp), %%r9d\n", var_stack[_2_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    subl    %%r9d, %%r8d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%r8d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+
+                        if(_2_operand_type == 'p'){
+                            sprintf(assembly_line, "\n    movq    -%d(%%rbp), %%r10\n", para_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    movl   %%r10d, %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    subl    %%r9d, %%r8d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%r8d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+                        
+                    }
+
+                    if(operand == '*'){
+                        if(_1_operand_type == 'c'){
+                            sprintf(assembly_line, "\n    movl    $%d, %%r8d\n", _1_operand_index);
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_1_operand_type == 'v'){
+                            sprintf(assembly_line, "\n    movl    -%d(%%rbp), %%r8d\n", var_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_1_operand_type == 'p'){
+                            sprintf(assembly_line, "\n    movq    -%d(%%rbp), %%r10\n", para_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    movl   %%r10d, %%r8d\n");
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_2_operand_type == 'c'){
+                            sprintf(assembly_line, "    movl    $%d, %%r9d\n", _2_operand_index);
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    imull   %%r8d, %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%r9d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+
+                        if(_2_operand_type == 'v'){
+                            sprintf(assembly_line, "    movl    -%d(%%rbp), %%r9d\n", var_stack[_2_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    imull   %%r8d, %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%r9d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+
+                        if(_2_operand_type == 'p'){
+                            sprintf(assembly_line, "\n    movq    -%d(%%rbp), %%r10\n", para_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    movl   %%r10d, %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    imull   %%r8d, %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%r9d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+                    }
+
+                    if(operand == '/'){
+                        if(_1_operand_type == 'c'){
+                            sprintf(assembly_line, "\n    movl    $%d, %%eax\n", _1_operand_index);
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    cltd   \n");
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_1_operand_type == 'v'){
+                            sprintf(assembly_line, "\n    movl    -%d(%%rbp), %%eax\n", var_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    cltd   \n");
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_1_operand_type == 'p'){
+                            sprintf(assembly_line, "\n    movq    -%d(%%rbp), %%r10\n", para_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    movl   %%r10d, %%eax\n");
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    cltd   \n");
+                            fputs(assembly_line, arquivo_S);
+                        }
+
+                        if(_2_operand_type == 'c'){
+                            sprintf(assembly_line, "    movl    $%d, %%r9d\n", _2_operand_index);
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    idivl   %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%eax, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+
+                        if(_2_operand_type == 'v'){
+                            sprintf(assembly_line, "    movl    -%d(%%rbp), %%r9d\n", var_stack[_2_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    idivl   %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%eax, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+
+                        if(_2_operand_type == 'p'){
+                            sprintf(assembly_line, "    movq    -%d(%%rbp), %%r10\n", para_stack[_1_operand_index-1]);
+                            fputs(assembly_line, arquivo_S);
+                            sprintf(assembly_line, "    movl   %%r10d, %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    idivl   %%r9d\n");
+                            fputs(assembly_line, arquivo_S);
+
+                            sprintf(assembly_line, "    movl    %%eax, -%d(%%rbp)\n", var_stack[var_index-1]);
+                            fputs(assembly_line, arquivo_S);
+
+                            continue;
+                        }
+                    }
+                }
+
+
+                r = sscanf(line, "vi%d = %c%*c%d", &var_index, &_1_operand_type, &_1_operand_index);
+                /// @brief Bloco de atribuição simples
+                /// @return 
+                if(r == 3){
+                    if(_1_operand_type == 'c'){
+                        sprintf(assembly_line, "\n    movl    $%d, -%d(%%rbp)\n", _1_operand_index, var_stack[var_index-1]);
+                        fputs(assembly_line, arquivo_S);
+
+                        continue;
+                    }
+
+                    if(_1_operand_type == 'v'){
+                        sprintf(assembly_line, "\n    movl    -%d(%%rbp), %%r8d\n", var_stack[_1_operand_index-1]);
+                        fputs(assembly_line, arquivo_S);
+                        sprintf(assembly_line, "    movl    %%r8d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                        fputs(assembly_line, arquivo_S);
+
+                        continue;
+                    }
+
+                    if(_1_operand_type == 'p'){
+                        sprintf(assembly_line, "\n    movl    -%d(%%rbp), %%r8d\n", para_stack[_1_operand_index-1]);
+                        fputs(assembly_line, arquivo_S);
+                        sprintf(assembly_line, "    movl    %%r8d, -%d(%%rbp)\n", var_stack[var_index-1]);
+                        fputs(assembly_line, arquivo_S);
+
+                        continue;
+                    }
+
+                }
+
 
                 
                 

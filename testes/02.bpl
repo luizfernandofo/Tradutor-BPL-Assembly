@@ -4,14 +4,36 @@ enddef
 return pi1
 end
 
-function f2 pa1
+function f2 pa1 pa2
 def
 var vi1
-var vi2
-vet va3 size ci30
+vet va2 size ci3
+var vi3
+vet va4 size ci5
+var vi5
 enddef
+
 vi1 = ci1
-vi2 = call f1 vi1 va3
-vi2 = call f1 ci5 pa1
+vi3 = ci5
+vi5 = ci-10
+vi1 = vi3
+vi3 = pa1
+vi1 = pa2
+
+vi2 = ci1 / ci-5
+vi2 = ci1 / vi2 
+vi2 = vi1 / ci3
+vi2 = ci1 / pi2 
+vi2 = pi1 / ci3
+
+vi1 = vi1 / vi2
+vi2 = vi1 / pi2 
+vi2 = pi1 / vi1
+
+vi2 = pi1 / pi2 
+
+vi1 = call f1 vi1 va3
+vi1 = call f1 ci5 pa1
+
 return vi2
 end
