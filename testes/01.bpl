@@ -3,9 +3,7 @@ def
 var vi1
 var vi2
 enddef
-vi1 = ci1
-vi2 = vi1
-vi1 = pi1 + vi2
-vi2 = vi1 * ci-5
+vi1 = ci6
+vi1 = pi1 * vi1
 return vi1
 end
