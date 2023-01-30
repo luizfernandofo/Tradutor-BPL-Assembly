@@ -3,7 +3,7 @@
 ## Compilando:
 
 ```
-gcc *.c src/*.c -o tradutor
+gcc main.c -o tradutor
 ```
 
 ## Executando
