@@ -1002,6 +1002,17 @@ int main (){
     }
 
     fclose(arquivo_S);
+    
+    if((arquivo_S = fopen("Assembly.S", "r")) == NULL) {
+        printf("Cannot open file.\n");
+        return 1;
+    }
+
+    while(fgets(line, LINESZ, arquivo_S)) {
+        printf("%s", line);
+    }
+
+    fclose(arquivo_S);
 
     return 0;
 }
