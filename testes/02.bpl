@@ -1,7 +1,7 @@
 function f1
 def
 enddef
-return pi1
+return ci1
 end
 
 function f2 pa1 pa2
