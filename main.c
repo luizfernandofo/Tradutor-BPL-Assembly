@@ -1,9 +1,21 @@
+/*
+
+Trabalho da disciplina de Software Básico.
+Tradutor da linguagem BPL (Bruno’s Programming Language) para Assembly.
+
+Feito por:
+
+Luiz Fernando de Freitas Oliveira
+Matheus Leonel
+Matheus Queiroz
+
+*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #define LINESZ 256
-
 
 // ===========================
 // Funções auxiliares
