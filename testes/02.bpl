@@ -1,4 +1,4 @@
-function f1 pi1 pa2
+function f1
 def
 enddef
 return pi1
@@ -24,10 +24,7 @@ vi5 = pi1 / ci3
 vi5 = vi1 / pi2 
 
 
-vi1 = call f1 ci1 
-vi3 = call f2 vi1 va3
-vi5 = call f3 ci-5 pi1 va3
-vi5 = call f4 pa2 pa3 pi1
+vi1 = call f1
 
 if vi3
 vi5 = call f4 pa2 pa3 pi1

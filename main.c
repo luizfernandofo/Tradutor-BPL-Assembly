@@ -491,8 +491,6 @@ int main (){
                             }
                         }
 
-                        
-
                         sprintf(assembly_line, "\n    call    f%d\n", func_index);
                         fputs(assembly_line, arquivo_S);
 
@@ -535,6 +533,17 @@ int main (){
                             }
                         }
 
+                        sprintf(assembly_line, "\n    call    f%d\n", func_index);
+                        fputs(assembly_line, arquivo_S);
+
+                        sprintf(assembly_line, "\n    movl    %%eax, -%d(%%rbp)\n", var_stack[var_index-1]);
+                        fputs(assembly_line, arquivo_S);
+
+                        control_str[0] = 0;
+                        continue;
+                    }
+
+                    if(r == 2){
                         sprintf(assembly_line, "\n    call    f%d\n", func_index);
                         fputs(assembly_line, arquivo_S);
 
